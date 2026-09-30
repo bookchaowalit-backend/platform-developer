@@ -1,20 +1,83 @@
 {
+  "$schema": "./schema/book-platform.contract.v1.schema.json",
   "schema_version": "book-platform.contract.v1",
   "platform_id": "developer",
   "repository": "book-developer-platform",
   "status": "scaffolded",
   "api_version": "v1",
   "data_owner": "none",
-  "capabilities": ["platform-api", "health", "contract"],
-  "depends_on": [],
+  "capabilities": [
+    "repo-template",
+    "ci-cd",
+    "config",
+    "feature-flags",
+    "release-convention"
+  ],
+  "depends_on": [
+    "security",
+    "observability"
+  ],
   "current_implementation": {
     "repository": "solo-empire",
-    "source_path": ".github"
+    "source_path": ".github",
+    "source_paths": [
+      ".github",
+      "infra/tasks"
+    ],
+    "source_status": "current-implementation-in-solo-empire"
   },
   "migration": {
     "compatibility_adapter": "required",
     "shadow_parity": "pending",
     "cutover": "pending",
     "rollback": "required"
-  }
+  },
+  "migration_gates": [
+    "reproducible build",
+    "secret scan",
+    "rollback documentation"
+  ],
+  "surface_doc": "docs/CONTRACT-SURFACE.md",
+  "interfaces": [
+    {
+      "id": "developer.workflow.ci",
+      "kind": "workflow",
+      "direction": "provides",
+      "name": "GitHub Actions CI (push, pull_request)",
+      "status": "current-in-solo-empire",
+      "source": ".github/workflows/ci.yml"
+    },
+    {
+      "id": "developer.workflow.platform-validate",
+      "kind": "workflow",
+      "direction": "provides",
+      "name": "Platform Validate workflow for infra/platform assets (no deploy)",
+      "status": "current-in-solo-empire",
+      "source": ".github/workflows/platform-validate.yml"
+    },
+    {
+      "id": "developer.config.dependabot",
+      "kind": "config",
+      "direction": "provides",
+      "name": "Dependabot update policy",
+      "status": "current-in-solo-empire",
+      "source": ".github/dependabot.yml"
+    },
+    {
+      "id": "developer.config.agent-roles",
+      "kind": "config",
+      "direction": "provides",
+      "name": "Sub-agent role registry shared by Copilot, Claude Code and Codex",
+      "status": "current-in-solo-empire",
+      "source": ".github/agents/roles.yaml"
+    },
+    {
+      "id": "developer.workflow.platform-check",
+      "kind": "workflow",
+      "direction": "provides",
+      "name": "Reusable offline contract check (scripts/check.sh + .github/workflows/check.yml in each platform)",
+      "status": "implemented",
+      "source": "none"
+    }
+  ]
 }
