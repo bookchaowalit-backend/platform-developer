@@ -1,0 +1,8 @@
+system_id: bookchaowalit-backend/book-backend/book-developer-platform
+prefix: CARD
+brand: "BOOK DEVELOPER PLATFORM"
+subtitle: "ขอบเขต contract ของ platform `developer` ยังไม่มี runtime"
+footer: "Book Developer Platform — Product Card"
+color: "#2f4b6e"
+audience: internal
+tier: L0
