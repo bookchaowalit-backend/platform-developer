@@ -2,7 +2,7 @@
   "$schema": "./schema/book-platform.contract.v1.schema.json",
   "schema_version": "book-platform.contract.v1",
   "platform_id": "developer",
-  "repository": "book-developer-platform",
+  "repository": "platform-developer",
   "status": "scaffolded",
   "api_version": "v1",
   "data_owner": "none",
