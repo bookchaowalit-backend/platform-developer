@@ -21,8 +21,7 @@ class FlagStore:
         if not isinstance(subjects,list) or len(subjects)>100:raise ValueError('Invalid subjects')
         subjects=sorted(set(subject(x) for x in subjects))
         if version is not None and (type(version) is not int or version<1):raise Conflict()
-        with self.db.transaction(workspace) as c:
-            c.row_factory=dict_row
+        with self.db.transaction(workspace) as conn, conn.cursor(row_factory=dict_row) as c:
             if version is None:
                 row=c.execute('INSERT INTO feature_flags(workspace_id,name,enabled,rollout,subjects) VALUES (%s,%s,%s,%s,%s) ON CONFLICT DO NOTHING RETURNING name,enabled,rollout,subjects,version',(workspace,name,enabled,rollout,Jsonb(subjects))).fetchone()
             else:
@@ -31,13 +30,11 @@ class FlagStore:
             return row
     def get(self,workspace,name):
         identifier(name)
-        with self.db.transaction(workspace) as c:
-            c.row_factory=dict_row
+        with self.db.transaction(workspace) as conn, conn.cursor(row_factory=dict_row) as c:
             return c.execute('SELECT name,enabled,rollout,subjects,version FROM feature_flags WHERE name=%s',(name,)).fetchone()
     def list(self,workspace,limit=100,after=''):
         if not 1<=limit<=100:raise ValueError('Invalid limit')
-        with self.db.transaction(workspace) as c:
-            c.row_factory=dict_row
+        with self.db.transaction(workspace) as conn, conn.cursor(row_factory=dict_row) as c:
             return c.execute('SELECT name,enabled,rollout,subjects,version FROM feature_flags WHERE name>%s ORDER BY name LIMIT %s',(after,limit)).fetchall()
     def delete(self,workspace,name,version):
         identifier(name)
