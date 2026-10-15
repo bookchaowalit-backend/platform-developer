@@ -1,0 +1,74 @@
+{
+  "schema": "platform-developer.gate.template-independence.v1",
+  "issue": "BOO-155",
+  "next_gate": "Keep repository templates and boundary checks independent from product source code.",
+  "contract": {
+    "repository": "bookchaowalit/architecture-docs",
+    "path": "systems/architecture/repository-boundaries.md",
+    "sections": ["#core-rule", "#current-migration-direction", "#scaling-rules"]
+  },
+  "owner_decision": "proposed-not-accepted",
+  "rules": {
+    "allowed_import_roots": "python-stdlib-or-local-scripts-and-tests",
+    "forbidden_path_patterns": [
+      "book-dev clone folder",
+      "sibling checkout path",
+      "absolute home path",
+      "solo-empire control-plane source",
+      "solo-empire checkout path"
+    ],
+    "default_gate_trace": "opens only inside the repository root or the Python installation; no process, no network",
+    "dropped_env": ["BOOK_BACKEND_CORE_DIR"]
+  },
+  "platform_developer": {
+    "base": "origin/main 44a9a3c",
+    "default_gate": ["scripts/check.py", "scripts/check_schema_pin.py"],
+    "allowed_lines": ["tests/test_contract_check.py:103", "tests/test_contract_check.py:104"],
+    "files": [
+      {"path": ".github/workflows/check.yml", "role": "ci-template", "in_ci": true, "external_input": "none"},
+      {"path": "scripts/check.py", "role": "boundary-check", "in_ci": true, "external_input": "none"},
+      {"path": "scripts/check.sh", "role": "ci-entrypoint", "in_ci": true, "external_input": "none"},
+      {"path": "scripts/check_independence.py", "role": "boundary-check", "in_ci": true, "external_input": "none"},
+      {"path": "scripts/check_registry_alignment.py", "role": "boundary-check", "in_ci": false, "external_input": "explicit-argument --solo-empire (registry file only)"},
+      {"path": "scripts/check_schema_pin.py", "role": "boundary-check", "in_ci": true, "external_input": "optional explicit --canonical or BOOK_BACKEND_CORE_DIR (platform core schema, not product source)"},
+      {"path": "tests/test_contract_check.py", "role": "test", "in_ci": true, "external_input": "none"},
+      {"path": "tests/test_drift_checks.py", "role": "test", "in_ci": true, "external_input": "none"},
+      {"path": "tests/test_independence.py", "role": "test", "in_ci": true, "external_input": "none"}
+    ]
+  },
+  "solo_empire_inventory": {
+    "commit": "63efeeb",
+    "note": "Read-only inventory of registry source_paths [.github, infra/tasks, repository-catalog]; 'product_source' means the item reads or stats files inside product/platform checkouts under the Book Dev clone folder or the knowledge-base checkout.",
+    "items": [
+      {"path": ".github/workflows/*", "kind": "ci-template", "present": false, "product_source": false, "evidence": "removed in 5f034945 (CI workflows and dependabot dropped from the hub)"},
+      {"path": ".github/dependabot.yml", "kind": "config", "present": false, "product_source": false, "evidence": "removed in 5f034945"},
+      {"path": "infra/tasks/*.yml", "kind": "task-adapters", "present": false, "product_source": "unknown", "evidence": "removed in 5f034945; moved to bookchaowalit/solo-ops (not inspected here)"},
+      {"path": ".github/ISSUE_TEMPLATE/*.yml", "kind": "repo-template", "present": true, "product_source": false, "evidence": ".github/ISSUE_TEMPLATE/task.yml (no path references)"},
+      {"path": ".github/agents/*", "kind": "agent-config", "present": true, "product_source": false, "evidence": ".github/agents/roles.yaml (no product path references)"},
+      {"path": ".github/hooks/solo-empire-lifecycle.json", "kind": "hook-config", "present": true, "product_source": false, "control_plane_source": true, "evidence": ".github/hooks/solo-empire-lifecycle.json:7 runs infra/scripts/agent/copilot_hooks.py"},
+      {"path": ".github/hooks/impeccable.json", "kind": "hook-config", "present": true, "product_source": false, "evidence": ".github/hooks/impeccable.json:8 runs an untracked .github/skills script when present"},
+      {"path": "infra/scripts/utils/registry_check.py", "kind": "boundary-check-runner", "present": true, "product_source": true, "evidence": "infra/scripts/utils/registry_check.py:23-33 runs every guard below, including book-dev, boundaries and system-repositories"},
+      {"path": "infra/scripts/utils/book_dev_structure_guard.py", "kind": "boundary-check", "present": true, "product_source": true, "evidence": "infra/scripts/utils/book_dev_structure_guard.py:21,103 walks the Book Dev clone folder"},
+      {"path": "infra/scripts/utils/module_boundary_guard.py", "kind": "boundary-check", "present": true, "product_source": true, "evidence": "infra/scripts/utils/module_boundary_guard.py:25-27,168-176,181-190 reads the knowledge-base checkout and stats product entrypoints"},
+      {"path": "infra/scripts/utils/system_repository_guard.py", "kind": "boundary-check", "present": true, "product_source": true, "evidence": "infra/scripts/utils/system_repository_guard.py:28-30,152-155 stats product checkout paths and the knowledge-base checkout"},
+      {"path": "infra/scripts/utils/platform_repository_guard.py", "kind": "boundary-check", "present": true, "product_source": true, "evidence": "infra/scripts/utils/platform_repository_guard.py:242-245,329-335 reads each platform checkout's contract.json"},
+      {"path": "infra/scripts/utils/repo_roadmap_guard.py", "kind": "boundary-check", "present": true, "product_source": true, "evidence": "infra/scripts/utils/repo_roadmap_guard.py:87-90 resolves document references inside sibling checkouts"},
+      {"path": "infra/scripts/utils/repo_roadmap_seed.py", "kind": "boundary-check", "present": true, "product_source": false, "evidence": "infra/scripts/utils/repo_roadmap_seed.py:46,276 matches the clone-folder prefix in registry data only"},
+      {"path": "infra/scripts/utils/repository_catalog_guard.py", "kind": "boundary-check", "present": true, "product_source": false, "evidence": "infra/scripts/utils/repository_catalog_guard.py:173 asks hub git ls-files that nothing under the clone folder is tracked"},
+      {"path": "infra/scripts/utils/workspace_boundary_guard.py", "kind": "boundary-check", "present": true, "product_source": false, "evidence": "infra/scripts/utils/workspace_boundary_guard.py:119,287-325 checks hub-tracked manifests and external boundary registry"},
+      {"path": "infra/scripts/platform/systems_status.py", "kind": "boundary-check", "present": true, "product_source": true, "evidence": "infra/scripts/platform/systems_status.py:81-83 stats each system's source path"},
+      {"path": "infra/scripts/utils/_env.py", "kind": "path-helper", "present": true, "product_source": true, "evidence": "infra/scripts/utils/_env.py:26,128-133 resolves sibling product checkouts"},
+      {"path": "infra/scripts/utils/sibling_paths.py", "kind": "path-helper", "present": true, "product_source": true, "evidence": "infra/scripts/utils/sibling_paths.py:6,10 searches the Book Dev clone folder"},
+      {"path": "repository-catalog/registries/*.yaml", "kind": "registry-data", "present": true, "product_source": false, "evidence": "repository-catalog/registries/system-repositories.yaml:655-678 (data only)"}
+    ]
+  },
+  "contract_json_source_status": {
+    "checked_with": "python3 scripts/check_registry_alignment.py --solo-empire <solo-empire @63efeeb>",
+    "missing_in_solo_empire": [
+      "infra/tasks",
+      ".github/workflows/ci.yml",
+      ".github/workflows/platform-validate.yml",
+      ".github/dependabot.yml"
+    ]
+  }
+}

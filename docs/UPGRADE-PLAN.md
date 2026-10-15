@@ -9,6 +9,12 @@ contract aligned with the parent registry, a documented contract surface, unit
 tests for the check and CI; it still has no runtime implementation, fixtures or
 parity evidence.
 
+## Gate evidence
+
+- [BOO-155: templates and boundary checks independent of product source](gates/BOO-155-template-independence.md)
+  — `scripts/check_independence.py` (in `scripts/check.sh`) and
+  `fixtures/gates/template-independence.json`. Owner decision proposed, not accepted.
+
 ## Backlog
 
 ### P0

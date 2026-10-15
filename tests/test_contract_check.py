@@ -100,8 +100,8 @@ class ContractCheckTests(unittest.TestCase):
         self.assert_error("must equal the first source_paths entry")
 
     def test_parent_traversal_in_source_paths_fails(self) -> None:
-        self.contract["current_implementation"]["source_paths"] = ["../secrets"]
-        self.contract["current_implementation"]["source_path"] = "../secrets"
+        self.contract["current_implementation"]["source_paths"] = ["../secrets"]  # independence: allow (negative test input)
+        self.contract["current_implementation"]["source_path"] = "../secrets"  # independence: allow (negative test input)
         self.write_contract()
         self.assert_error("does not match pattern")
 
