@@ -65,3 +65,40 @@ def test_applied_migration_checksum_required(setup):
     kwargs={'adapters':{'email':Adapter()}} if 'developer'=='communication' else {}
     with TestClient(create_app(db,verifier,**kwargs)) as c:
         assert c.get('/readyz').status_code==503
+
+
+@pytest.mark.parametrize('kind,target,privilege',[('TABLE', 'feature_flags', 'SELECT'), ('TABLE', 'feature_flags', 'INSERT'), ('TABLE', 'feature_flags', 'UPDATE'), ('TABLE', 'feature_flags', 'DELETE'), ('SCHEMA', 'public', 'USAGE'), ('TABLE', 'platform_schema_migrations', 'SELECT')])
+def test_readiness_requires_each_effective_privilege(setup,kind,target,privilege):
+    import psycopg
+    from psycopg import sql
+    temp,db,verifier,headers=setup
+    MigrationRunner(temp.admin_dsn,namespace='flags').apply(MIGRATIONS)
+    temp.grant_schema('public')
+    with psycopg.connect(temp.admin_dsn) as admin:
+        admin.execute('REVOKE USAGE ON SCHEMA public FROM PUBLIC')
+    class Adapter:configured=True
+    kwargs={'adapters':{'email':Adapter()}} if 'developer'=='communication' else {}
+    with TestClient(create_app(db,verifier,**kwargs)) as c:
+        assert c.get('/readyz').status_code==200
+        with psycopg.connect(temp.admin_dsn) as admin:
+            admin.execute(sql.SQL('REVOKE {} ON {} {} FROM {}').format(sql.SQL(privilege),sql.SQL(kind),sql.Identifier(target),sql.Identifier(temp.runtime_role)))
+        assert c.get('/readyz').status_code==503
+        with psycopg.connect(temp.admin_dsn) as admin:
+            admin.execute(sql.SQL('GRANT {} ON {} {} TO {}').format(sql.SQL(privilege),sql.SQL(kind),sql.Identifier(target),sql.Identifier(temp.runtime_role)))
+        assert c.get('/readyz').status_code==200
+
+
+def test_documented_cli_migrate_makes_http_ready(setup):
+    import subprocess
+    import sys
+    from pathlib import Path
+    import psycopg
+    temp,db,verifier,headers=setup
+    root=Path(__file__).resolve().parents[1]
+    result=subprocess.run([sys.executable,'-m','platform_developer','migrate'],cwd=root,env={'DATABASE_URL':temp.admin_dsn,'PYTHONPATH':str(root/'src')},capture_output=True,text=True,timeout=30)
+    assert result.returncode==0,result.stderr
+    temp.grant_schema('public')
+    with TestClient(create_app(db,verifier)) as c:
+        assert c.get('/readyz').status_code==200
+    with psycopg.connect(temp.admin_dsn) as admin:
+        assert admin.execute('SELECT namespace,version,checksum FROM platform_schema_migrations').fetchall()==[('flags',m.version,m.checksum) for m in MIGRATIONS]
