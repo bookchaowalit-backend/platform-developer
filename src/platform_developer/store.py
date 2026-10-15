@@ -1,7 +1,7 @@
 import hashlib
 import re
 from psycopg.rows import dict_row
-from .migrations import MIGRATIONS
+from .migrations import MIGRATIONS,MIGRATION_NAMESPACE
 from psycopg.types.json import Jsonb
 class Conflict(Exception):pass
 
@@ -50,7 +50,15 @@ class FlagStore:
         return value in row['subjects'] or bucket<row['rollout']
     def ready(self):
         with self.db.transaction(__import__('uuid').UUID(int=0)) as c:
-            history=c.execute('SELECT version,checksum FROM platform_schema_migrations WHERE namespace=%s ORDER BY version',('flags',)).fetchall()
+            # Check every operation individually: a comma privilege list means ANY.
+            required_permissions=c.execute("""SELECT has_schema_privilege(current_user,'public','USAGE')
+                AND has_table_privilege(current_user,'public.platform_schema_migrations','SELECT')
+                AND has_table_privilege(current_user,'public.feature_flags','SELECT')
+                AND has_table_privilege(current_user,'public.feature_flags','INSERT')
+                AND has_table_privilege(current_user,'public.feature_flags','UPDATE')
+                AND has_table_privilege(current_user,'public.feature_flags','DELETE')""").fetchone()[0]
+            if not required_permissions:return False
+            history=c.execute('SELECT version,checksum FROM platform_schema_migrations WHERE namespace=%s ORDER BY version',(MIGRATION_NAMESPACE,)).fetchall()
             if history!=[(m.version,m.checksum) for m in MIGRATIONS]:return False
             row=c.execute("SELECT relrowsecurity AND relforcerowsecurity FROM pg_class WHERE oid=to_regclass('feature_flags')").fetchone()
             c.execute('SELECT name,version FROM feature_flags LIMIT 0')

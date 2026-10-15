@@ -22,7 +22,8 @@ no container build or Railway deployment has been executed here.
   (public PEM) or `JWT_JWKS_URL` (trusted HTTPS). Credentials never come from
   files or token-supplied URLs. Use the shared-core workspace RS256 profile.
 - `GET /healthz`, `/readyz`, `/metrics` use shared redacted diagnostics.
-  Readiness checks exact applied migration versions/checksums and table RLS;
+  Readiness checks exact applied migration versions/checksums, table RLS, effective
+  schema USAGE/history SELECT and every required table operation individually;
   missing schema returns generic 503. Setup and serving are separate commands.
 - Python interface `platform_developer.app:create_app(database, verifier)` and
   `platform_developer.migrations.MIGRATIONS` support explicit dependency injection.
@@ -88,3 +89,27 @@ configuration store is advertised.
 - Original `bash scripts/check.sh`: passed, 36 legacy unit tests.
 - Isolated wheel build and import: passed. No wheel publication, container
   build, live provider operation, push or deployment was performed.
+
+## Independent review correction — 2026-10-15
+
+Round 1 reproduced 4 assertion-level failures before fixes in this service.
+Readiness now checks effective `public` schema USAGE, history SELECT, and
+separate SELECT/INSERT/UPDATE privileges for writable tables, plus DELETE for
+feature flags. It does not interpret comma-separated privilege lists as an
+all-required check (PostgreSQL treats those as any privilege). Each required
+privilege is revoked independently in a disposable runtime role: ready changes
+200 to 503, then returns to 200 after restoration. All audit forbidden
+UPDATE/DELETE/TRUNCATE checks remain; each is also granted independently in
+regression tests and correctly makes security not ready.
+
+Full PostgreSQL-backed suite after correction: `49 passed`, no database
+skips, one unchanged upstream Starlette/httpx warning. Original offline check
+also passed. Migration 0001 SQL/checksum is unchanged.
+
+The documented `python -m platform_developer migrate` now shares the canonical
+`MIGRATION_NAMESPACE='flags'` constant with readiness. A subprocess regression
+test invokes that exact CLI against a fresh database, grants runtime access,
+then verifies HTTP `/readyz` is 200 and stored namespace/checksum are correct.
+Previously this flow stored namespace `developer` and returned 503. Existing
+`flags` migration history is preserved; no migration history rewrite or SQL
+backfill is performed.

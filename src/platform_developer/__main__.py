@@ -2,14 +2,14 @@
 import argparse
 import os
 from platform_backend_core import Database,MigrationRunner,TokenVerifier
-from .migrations import MIGRATIONS
+from .migrations import MIGRATIONS,MIGRATION_NAMESPACE
 from .app import create_app
 
 def main():
     p=argparse.ArgumentParser();p.add_argument('command',choices=['serve','migrate']);args=p.parse_args()
     try:
         if args.command=='migrate':
-            MigrationRunner(os.environ['DATABASE_URL'],namespace='developer').apply(MIGRATIONS)
+            MigrationRunner(os.environ['DATABASE_URL'],namespace=MIGRATION_NAMESPACE).apply(MIGRATIONS)
             return
         verifier=TokenVerifier(issuer=os.environ['JWT_ISSUER'],audience=os.environ['JWT_AUDIENCE'],public_key=os.environ.get('JWT_PUBLIC_KEY'),jwks_url=os.environ.get('JWT_JWKS_URL'))
         app=create_app(Database(os.environ['DATABASE_URL']),verifier)
