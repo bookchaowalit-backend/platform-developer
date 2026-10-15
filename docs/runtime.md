@@ -113,3 +113,10 @@ then verifies HTTP `/readyz` is 200 and stored namespace/checksum are correct.
 Previously this flow stored namespace `developer` and returned 503. Existing
 `flags` migration history is preserved; no migration history rewrite or SQL
 backfill is performed.
+
+## Pooled connection reuse
+
+Store queries that return mappings use cursor-scoped `dict_row`; they do not
+change the pooled connection row factory. Single-connection PostgreSQL
+regressions cover successful traffic, conflicts, rollback and foreign-workspace
+reads followed by repeated service and shared-core readiness checks.
