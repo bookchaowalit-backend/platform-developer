@@ -3,7 +3,7 @@
 
 Gate (BOO-155): "Keep repository templates and boundary checks independent from
 product source code." This check covers every template and boundary-check file
-in this repository (``scripts/``, ``tests/``, ``.github/workflows/``) and fails when:
+in this repository (``scripts/``, ``tests/``, ``.github/workflows/*.yml|*.yaml``) and fails when:
 
 1. a Python file imports anything other than the standard library or a module
    that lives in this repository's ``scripts/`` or ``tests/`` directories, or
@@ -42,7 +42,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 SELF_RELATIVE = "scripts/check_independence.py"
-SCOPE_GLOBS = ("scripts/*.py", "scripts/*.sh", "tests/*.py", ".github/workflows/*.yml")
+SCOPE_GLOBS = ("scripts/*.py", "scripts/*.sh", "tests/*.py", ".github/workflows/*.yml", ".github/workflows/*.yaml")
 LOCAL_MODULE_DIRS = ("scripts", "tests")
 GATE_LINE_RE = re.compile(r"^\s*python3\s+(scripts/[\w.-]+\.py)\s*$")
 DROPPED_ENV = ("BOOK_BACKEND_CORE_DIR",)

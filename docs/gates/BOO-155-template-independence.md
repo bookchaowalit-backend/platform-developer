@@ -37,7 +37,7 @@ that has no sibling repositories.
 | Clean checkout | `tests/test_independence.py::CleanCheckoutTests` copies the repository alone into an empty directory, with an empty `HOME`, and runs the full `bash scripts/check.sh` there. |
 
 Scope (`SCOPE_GLOBS`): `scripts/*.py`, `scripts/*.sh`, `tests/*.py`,
-`.github/workflows/*.yml`. The machine-readable mapping is
+`.github/workflows/*.yml`, `.github/workflows/*.yaml`. The machine-readable mapping is
 [`fixtures/gates/template-independence.json`](../../fixtures/gates/template-independence.json);
 `GateFixtureTests` fail when the file list, default gate, CI flags, allowed
 lines or rule labels drift from the code.
@@ -47,6 +47,7 @@ lines or rule labels drift from the code.
 | File | Role | In CI | External input |
 |---|---|---|---|
 | `.github/workflows/check.yml` | CI template | yes | none (`actions/checkout` of this repo only, check.yml:26-37) |
+| `.github/workflows/shared-runtime.yml` | CI template | yes | pre-registered: `present_on: pending codex/shared-infrastructure-20261015 PR #1` (not on main yet) |
 | `scripts/check.sh` | CI entrypoint | yes | none (cds to its own root, check.sh:3-4) |
 | `scripts/check.py` | boundary check | yes | none (`ROOT` from `__file__`, check.py:28) |
 | `scripts/check_schema_pin.py` | boundary check | yes | optional `--canonical` / `BOOK_BACKEND_CORE_DIR` (platform core schema, check_schema_pin.py:99-103); not used by the default gate |
@@ -54,7 +55,7 @@ lines or rule labels drift from the code.
 | `scripts/check_independence.py` | boundary check | yes | none |
 | `tests/test_contract_check.py`, `tests/test_drift_checks.py`, `tests/test_independence.py` | tests | yes | temp copies only |
 
-Result: all 9 files pass; the default gate opens nothing outside the repository.
+Result: all 9 files present on this branch pass (10 after PR #1 merges); the default gate opens nothing outside the repository.
 
 ## Inventory: solo-empire (read-only, `63efeeb`)
 
@@ -74,7 +75,7 @@ checkouts (Book Dev clone folder) or the knowledge-base checkout.
 | `infra/scripts/utils/book_dev_structure_guard.py` | boundary check | yes | **yes** | :21,103 walks the clone folder |
 | `infra/scripts/utils/module_boundary_guard.py` | boundary check | yes | **yes** | :25-27,168-176,181-190 knowledge-base checkout, product entrypoints |
 | `infra/scripts/utils/system_repository_guard.py` | boundary check | yes | **yes** | :28-30,152-155 stats product checkout paths |
-| `infra/scripts/utils/platform_repository_guard.py` | boundary check | yes | **yes** | :242-245,329-335 reads each platform checkout's `contract.json` |
+| `infra/scripts/utils/platform_repository_guard.py` | boundary check | yes | **yes** | :329-335 reads each platform checkout's `contract.json` |
 | `infra/scripts/utils/repo_roadmap_guard.py` | boundary check | yes | **yes** | :87-90 resolves documents in sibling checkouts |
 | `infra/scripts/platform/systems_status.py` | boundary check | yes | **yes** | :81-83 stats system source paths |
 | `infra/scripts/utils/_env.py`, `sibling_paths.py` | path helpers | yes | **yes** | `_env.py`:26,128-133; `sibling_paths.py`:6,10 |
@@ -105,10 +106,16 @@ siblings, but their full verdict still depends on product checkouts.
    copied into each platform repository; it is not a `workflow_call` yet
    (UPGRADE-PLAN P0).
 5. Open PR #1 (`codex/shared-infrastructure-20261015`) adds
-   `.github/workflows/shared-runtime.yml`, which enters this check's scope. A
-   static run against that branch passes except the two negative-test lines this
-   change marks. `src/` and `runtime_tests/` from that PR are runtime code and
-   outside this gate's scope.
+   `.github/workflows/shared-runtime.yml`, which is in this check's scope. A
+   fixture pinned only to main's files would make whichever PR merges second
+   fail `GateFixtureTests`, so the fixture pre-registers that file with
+   `present_on: "pending codex/shared-infrastructure-20261015 PR #1"`. The
+   drift test tolerates a listed-but-absent file only with that `pending `
+   marker and still fails for any unlisted in-scope file. Verified: this branch
+   alone and a local test merge with PR #1 both pass `bash scripts/check.sh`
+   (the workflow also passes the static and import rules). After PR #1 merges,
+   the `present_on` field should be removed. `src/` and `runtime_tests/` from
+   that PR are runtime code and outside this gate's scope.
 
 ## Owner decision — PROPOSED, NOT ACCEPTED
 

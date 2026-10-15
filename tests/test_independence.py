@@ -140,6 +140,26 @@ class IndependenceCheckTests(unittest.TestCase):
         self.assertIn("FAIL:", out.getvalue())
 
 
+FIXTURE_HINT = (
+    "update platform_developer.files in fixtures/gates/template-independence.json "
+    "and the inventory in docs/gates/BOO-155-template-independence.md"
+)
+
+
+def fixture_drift(section: dict, actual: list[str]) -> tuple[list[str], list[str]]:
+    """Return ``(unlisted, absent)``; a listed file may be absent only with the pending marker."""
+
+    marker = section["pending_marker"]
+    listed = {item["path"] for item in section["files"]}
+    unlisted = sorted(set(actual) - listed)
+    absent = sorted(
+        item["path"]
+        for item in section["files"]
+        if item["path"] not in actual and not str(item.get("present_on", "")).startswith(marker)
+    )
+    return unlisted, absent
+
+
 class GateFixtureTests(unittest.TestCase):
     """Fail when fixtures/gates/template-independence.json drifts from the repository."""
 
@@ -148,8 +168,24 @@ class GateFixtureTests(unittest.TestCase):
         cls.fixture = json.loads(FIXTURE.read_text(encoding="utf-8"))
 
     def test_fixture_lists_every_file_in_scope(self) -> None:
-        listed = [item["path"] for item in self.fixture["platform_developer"]["files"]]
-        self.assertEqual(sorted(listed), independence.scope_files(ROOT))
+        section = self.fixture["platform_developer"]
+        listed = [item["path"] for item in section["files"]]
+        self.assertEqual(len(listed), len(set(listed)), "fixture lists a file twice")
+        unlisted, absent = fixture_drift(section, independence.scope_files(ROOT))
+        self.assertEqual(unlisted, [], f"in-scope files missing from the fixture: {unlisted}; {FIXTURE_HINT}")
+        self.assertEqual(absent, [], f"fixture lists files that do not exist: {absent}; {FIXTURE_HINT}")
+
+    def test_pending_marker_tolerates_only_absent_listed_files(self) -> None:
+        section = json.loads(json.dumps(self.fixture["platform_developer"]))
+        pending = [item["path"] for item in section["files"] if "present_on" in item]
+        actual = [path for path in independence.scope_files(ROOT) if path not in pending]
+        self.assertEqual(fixture_drift(section, actual), ([], []))
+        # an unlisted in-scope file still fails, whatever is pending
+        self.assertEqual(fixture_drift(section, actual + [".github/workflows/extra.yaml"])[0], [".github/workflows/extra.yaml"])
+        # a listed-but-absent file without the pending marker fails
+        for item in section["files"]:
+            item.pop("present_on", None)
+        self.assertEqual(fixture_drift(section, actual), ([], sorted(pending)))
 
     def test_fixture_default_gate_matches_check_sh(self) -> None:
         self.assertEqual(self.fixture["platform_developer"]["default_gate"], independence.default_gate(ROOT))
