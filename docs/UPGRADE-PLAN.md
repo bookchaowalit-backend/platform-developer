@@ -13,7 +13,7 @@ parity evidence.
 
 - [BOO-155: templates and boundary checks independent of product source](gates/BOO-155-template-independence.md)
   — `scripts/check_independence.py` (in `scripts/check.sh`) and
-  `fixtures/gates/template-independence.json`. Owner decision proposed, not accepted.
+  `fixtures/gates/template-independence.json`. Owner decision accepted 2026-10-16; merge-blocking branch protection is still a follow-up.
 
 ## Backlog
 

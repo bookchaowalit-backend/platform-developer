@@ -101,7 +101,7 @@ siblings, but their full verdict still depends on product checkouts.
    inspected or checked here.
 3. Nine solo-empire boundary-check items still read product/platform checkouts
    (table above). They are hub registry guards, not templates in this
-   repository; moving or splitting them is an owner decision.
+   repository. Decided 2026-10-16 (policy 3): they stay in solo-empire.
 4. The `developer.workflow.platform-check` interface (reusable check) is still
    copied into each platform repository; it is not a `workflow_call` yet
    (UPGRADE-PLAN P0).
@@ -117,9 +117,14 @@ siblings, but their full verdict still depends on product checkouts.
    the `present_on` field should be removed. `src/` and `runtime_tests/` from
    that PR are runtime code and outside this gate's scope.
 
-## Owner decision — PROPOSED, NOT ACCEPTED
+## Owner decision — ACCEPTED (owner decision 2026-10-16)
 
-The owner is asked to accept:
+Owner's answer, verbatim: "ทั้งหมด ยกเว้น 140/256 (Recommended)" (accept the
+recommended option on every pending gate decision except BOO-140 and BOO-256),
+relayed via the parent session `local_a6dedf75`. For BOO-155 this accepts the
+three policies below as written.
+
+The owner accepted:
 
 1. `scripts/check_independence.py` in `scripts/check.sh` is the gate check for
    "templates and boundary checks independent from product source" in
@@ -133,8 +138,27 @@ The owner is asked to accept:
    (`.github/ISSUE_TEMPLATE`, `.github/agents`, `.github/hooks`) in a separate
    registry change, after which `contract.json` follows.
 
-Nothing here claims an accepted decision, a status change, a runtime move or a
-production cutover.
+### Still open after the decision
+
+The decision accepts the policies; it does not by itself carry them out.
+
+- **Merge blocking is not enforced yet (policy 1).** `main` has no branch
+  protection and no rulesets (`gh api .../branches/main/protection` returns 404
+  "Branch not protected"; `.../rulesets` returns `[]`, checked 2026-10-16). CI
+  runs `scripts/check.sh` on every push and pull request, but a red check does not
+  stop a merge. Follow-up for the owner: require the "Contract and tests" checks
+  (Python 3.11 and 3.12) on `main`. Repository settings were not changed here.
+- **Environment override (policy 2).** `scripts/check_schema_pin.py` still
+  accepts `BOOK_BACKEND_CORE_DIR` as a default for `--canonical`
+  (`check_schema_pin.py:100-103`). The default gate and its trace drop that
+  variable, and CI does not set it, so it is never read by default or in CI.
+  Under a strict reading of "explicit argument only", the env default should be
+  removed in a follow-up.
+- **Registry change (policy 3).** The `source_paths` update in `platforms.yaml`
+  and `system-repositories.yaml`, and the matching `contract.json` change (gap
+  1), still need to be made in solo-empire first. Not done here.
+- Gaps 2, 4 and 5 above are unchanged. The gate's registry status was not
+  changed, and nothing here moves runtime or claims a cutover.
 
 ## Local verification
 

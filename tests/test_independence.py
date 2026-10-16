@@ -208,10 +208,19 @@ class GateFixtureTests(unittest.TestCase):
 
     def test_fixture_contract_and_decision(self) -> None:
         self.assertEqual(self.fixture["contract"]["path"], "systems/architecture/repository-boundaries.md")
-        self.assertEqual(self.fixture["owner_decision"], "proposed-not-accepted")
+        decision = self.fixture["owner_decision"]
+        self.assertEqual(decision["status"], "accepted")
+        self.assertEqual(decision["date"], "2026-10-16")
+        self.assertTrue(decision["answer_verbatim"])
+        self.assertEqual(len(decision["policies"]), 3)
+        self.assertTrue(decision["open_follow_ups"])
         doc = ROOT / "docs" / "gates" / "BOO-155-template-independence.md"
         self.assertTrue(doc.is_file())
-        self.assertIn(self.fixture["next_gate"], doc.read_text(encoding="utf-8"))
+        text = doc.read_text(encoding="utf-8")
+        self.assertIn(self.fixture["next_gate"], text)
+        self.assertIn(f"## Owner decision — ACCEPTED (owner decision {decision['date']})", text)
+        self.assertIn(decision["answer_verbatim"], text)
+        self.assertNotIn("PROPOSED, NOT ACCEPTED", text)
 
     def test_solo_empire_inventory_has_evidence(self) -> None:
         items = self.fixture["solo_empire_inventory"]["items"]
