@@ -7,7 +7,22 @@
     "path": "systems/architecture/repository-boundaries.md",
     "sections": ["#core-rule", "#current-migration-direction", "#scaling-rules"]
   },
-  "owner_decision": "proposed-not-accepted",
+  "owner_decision": {
+    "status": "accepted",
+    "date": "2026-10-16",
+    "answer_verbatim": "ทั้งหมด ยกเว้น 140/256 (Recommended)",
+    "relayed_via": "parent session local_a6dedf75",
+    "policies": [
+      "check-blocks-merge",
+      "other-checkout-reads-explicit-argument-only",
+      "hub-guards-stay-in-solo-empire"
+    ],
+    "open_follow_ups": [
+      "require the Contract and tests checks on main (no branch protection or ruleset as of 2026-10-16)",
+      "drop the BOOK_BACKEND_CORE_DIR env default in scripts/check_schema_pin.py",
+      "update developer-platform source_paths in solo-empire registries, then contract.json"
+    ]
+  },
   "rules": {
     "allowed_import_roots": "python-stdlib-or-local-scripts-and-tests",
     "forbidden_path_patterns": [
