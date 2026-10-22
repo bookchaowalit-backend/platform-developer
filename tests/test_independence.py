@@ -79,7 +79,8 @@ class IndependenceCheckTests(unittest.TestCase):
         self.assertTrue(any("uses sys.path" in error for error in errors), errors)
 
     def test_hard_coded_sibling_checkout_fails(self) -> None:
-        sibling = "/".join(["..", "solo-empire", "repository-catalog"])
+        # Built at run time so this file does not itself hold the path the check forbids.
+        sibling = "/".join(["..", "solo-empire", "repository-catalog"])  # noqa: FLY002
         self.append("scripts/check_registry_alignment.py", f'\nDEFAULT_SOLO = "{sibling}"\n')
         errors = independence.static_errors(self.root)
         self.assertTrue(any("sibling checkout path" in error for error in errors), errors)

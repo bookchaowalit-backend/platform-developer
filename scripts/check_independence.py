@@ -127,9 +127,15 @@ def _imported_roots(tree: ast.AST) -> list[tuple[int, str]]:
             roots.extend((node.lineno, alias.name.split(".")[0]) for alias in node.names)
         elif isinstance(node, ast.ImportFrom) and node.level == 0 and node.module:
             roots.append((node.lineno, node.module.split(".")[0]))
-        elif isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "__import__":
-            if node.args and isinstance(node.args[0], ast.Constant) and isinstance(node.args[0].value, str):
-                roots.append((node.lineno, node.args[0].value.split(".")[0]))
+        elif (
+            isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Name)
+            and node.func.id == "__import__"
+            and node.args
+            and isinstance(node.args[0], ast.Constant)
+            and isinstance(node.args[0].value, str)
+        ):
+            roots.append((node.lineno, node.args[0].value.split(".")[0]))
     return roots
 
 
