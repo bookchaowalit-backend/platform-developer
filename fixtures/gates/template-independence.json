@@ -42,7 +42,7 @@
     "pending_marker": "pending ",
     "files": [
       {"path": ".github/workflows/check.yml", "role": "ci-template", "in_ci": true, "external_input": "none"},
-      {"path": ".github/workflows/shared-runtime.yml", "role": "ci-template", "in_ci": true, "external_input": "none", "present_on": "pending codex/shared-infrastructure-20261015 PR #1"},
+      {"path": ".github/workflows/shared-runtime.yml", "role": "ci-template", "in_ci": true, "external_input": "none"},
       {"path": "scripts/check.py", "role": "boundary-check", "in_ci": true, "external_input": "none"},
       {"path": "scripts/check.sh", "role": "ci-entrypoint", "in_ci": true, "external_input": "none"},
       {"path": "scripts/check_independence.py", "role": "boundary-check", "in_ci": true, "external_input": "none"},
