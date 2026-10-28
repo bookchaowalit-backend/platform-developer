@@ -3,7 +3,7 @@ from platform_backend_core import create_app as base_app
 from platform_backend_core import require_scope
 from pydantic import BaseModel, ConfigDict, Field
 
-from .store import Conflict, FlagStore
+from .store import Conflict, FlagStore, InvalidInput
 
 
 class Flag(BaseModel):
@@ -22,7 +22,7 @@ def create_app(database,verifier):
     async def conflict(request,exc):
         from fastapi.responses import JSONResponse
         return JSONResponse({'detail':'Version conflict'},409)
-    @app.exception_handler(ValueError)
+    @app.exception_handler(InvalidInput)
     async def invalid(request,exc):
         from fastapi.responses import JSONResponse
         return JSONResponse({'detail':'Invalid input'},422)

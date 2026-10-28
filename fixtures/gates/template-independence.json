@@ -48,6 +48,7 @@
       {"path": "scripts/check_independence.py", "role": "boundary-check", "in_ci": true, "external_input": "none"},
       {"path": "scripts/check_registry_alignment.py", "role": "boundary-check", "in_ci": false, "external_input": "explicit-argument --solo-empire (registry file only)"},
       {"path": "scripts/check_schema_pin.py", "role": "boundary-check", "in_ci": true, "external_input": "optional explicit --canonical or BOOK_BACKEND_CORE_DIR (platform core schema, not product source)"},
+      {"path": "tests/test_build_hygiene.py", "role": "test", "in_ci": true, "external_input": "none"},
       {"path": "tests/test_contract_check.py", "role": "test", "in_ci": true, "external_input": "none"},
       {"path": "tests/test_drift_checks.py", "role": "test", "in_ci": true, "external_input": "none"},
       {"path": "tests/test_independence.py", "role": "test", "in_ci": true, "external_input": "none"}

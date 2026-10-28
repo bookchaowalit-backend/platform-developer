@@ -47,15 +47,16 @@ lines or rule labels drift from the code.
 | File | Role | In CI | External input |
 |---|---|---|---|
 | `.github/workflows/check.yml` | CI template | yes | none (`actions/checkout` of this repo only, check.yml:26-37) |
-| `.github/workflows/shared-runtime.yml` | CI template | yes | none from product repos (`actions/checkout` of this repo; `pip install` of `platform-backend-core` at the pinned commit; landed with PR #1) |
+| `.github/workflows/shared-runtime.yml` | CI template | yes | none from product repos (SHA-pinned `actions/checkout` of this repo; `pip install` of `platform-backend-core` at the pinned commit; `docker build .` of this repo with the same core commit, no push; landed with PR #1) |
 | `scripts/check.sh` | CI entrypoint | yes | none (cds to its own root, check.sh:3-4) |
 | `scripts/check.py` | boundary check | yes | none (`ROOT` from `__file__`, check.py:28) |
 | `scripts/check_schema_pin.py` | boundary check | yes | optional `--canonical` / `BOOK_BACKEND_CORE_DIR` (platform core schema, check_schema_pin.py:99-103); not used by the default gate |
 | `scripts/check_registry_alignment.py` | boundary check | no | explicit `--solo-empire PATH`, reads the registry file only (check_registry_alignment.py:25,106-111) |
 | `scripts/check_independence.py` | boundary check | yes | none |
+| `tests/test_build_hygiene.py` | test | yes | none (reads `Dockerfile`, `.gitignore` and `.github/workflows/` in this repository only) |
 | `tests/test_contract_check.py`, `tests/test_drift_checks.py`, `tests/test_independence.py` | tests | yes | temp copies only |
 
-Result: all 10 files pass; the default gate opens nothing outside the repository.
+Result: all 11 files pass; the default gate opens nothing outside the repository.
 
 ## Inventory: solo-empire (read-only, `63efeeb`)
 
