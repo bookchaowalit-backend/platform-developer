@@ -1,6 +1,7 @@
 # Developer runtime pilot
 
-Status: implemented and locally verified; deployment artifacts staged only.
+Status: implemented, verified locally and in CI on Python 3.12/PostgreSQL 16;
+deployment artifacts staged only (see the staging plan at the end).
 Correlation: `SHARED-INFRA-2026-10-15`. No production activation or provider
 acceptance is claimed. The legacy contract's scaffolded migration marker stays
 unchanged because its guard requires activation evidence.
@@ -43,8 +44,8 @@ local admin DSN> python -m pytest -q`. Without that DSN the PostgreSQL cases
 visibly skip and provide no durability evidence. Runtime tests use unique
 throwaway databases and NOSUPERUSER NOBYPASSRLS roles, real JWT signatures,
 concurrent independent connections, and HTTP requests. Tests never call live
-providers. Local verification uses Python 3.14/PostgreSQL 18; the 3.12/16 floor
-is specified but was not executed. One upstream Starlette/httpx deprecation
+providers. The 2026-10-15 record below used Python 3.14/PostgreSQL 18; the
+3.12/16 floor was executed on 2026-10-29 (see that record). One upstream Starlette/httpx deprecation
 warning remains. Production load, backup restore, credential rotation, ingress
 policy and full provider acceptance belong to integration/release gates.
 
@@ -120,3 +121,81 @@ Store queries that return mappings use cursor-scoped `dict_row`; they do not
 change the pooled connection row factory. Single-connection PostgreSQL
 regressions cover successful traffic, conflicts, rollback and foreign-workspace
 reads followed by repeated service and shared-core readiness checks.
+
+## Verification 2026-10-29 (branch `developer-runtime`)
+
+PR #1 (`codex/shared-infrastructure-20261015`, closed by decision D8 with the
+branch kept) rebased onto `main` `ac888fa` without conflicts, keeping `main`'s
+contract, BOO-155 independence gate and shared CI v1.1.1 (Ruff, `scripts/check.sh`,
+security scans incl. gitleaks). Scope stays the feature-flag API above; no flag
+behaviour changed.
+
+Changes beyond the rebase:
+
+- BOO-155 gap 5 closed: the fixture's `present_on: pending ...` marker for
+  `.github/workflows/shared-runtime.yml` is removed now that the file lands, and
+  `GateFixtureTests.test_present_files_carry_no_pending_marker` fails if an
+  existing file keeps a pending marker. The pending-tolerance test uses a
+  synthetic not-landed file so it still exercises the rule.
+- Reproducible build gate: `[tool.uv.sources]` pins `platform-backend-core` to the
+  commit `shared-runtime.yml` installs (`d00e0119`; the name is not on PyPI, so this
+  blocks dependency confusion). `runtime_tests/test_build_pin.py` checks the pin
+  matches the workflow and the dependency stays exact.
+- Ruff 0.17.1 clean: `extend-immutable-calls` for FastAPI markers and
+  `require_scope`, sorted/unused imports, the RLS regression asserts
+  `InsufficientPrivilege` instead of any exception, a copy-pasted
+  communication-adapter branch removed from two readiness tests, and the CLI's
+  redacting `except` carries a `noqa: BLE001` reason.
+- `runtime_tests/test_pool_reuse.py` skips visibly without `PLATFORM_TEST_DSN`
+  (it raised `KeyError`), as this document already promised.
+
+Environment: Python 3.12, PostgreSQL 16.2 (local `pgserver`; CI uses the
+`postgres:16` service), `platform-backend-core` at `d00e0119`, no network calls,
+no credentials. `PLATFORM_TEST_DSN` pointed at the disposable local server.
+
+RED (each test written first and run before the change):
+
+- `python3 -m unittest tests.test_independence`: 2 failures,
+  `test_present_files_carry_no_pending_marker` (`['.github/workflows/shared-runtime.yml'] != []`)
+  and the clean-checkout copy failing on the same test.
+- `pytest runtime_tests/test_build_pin.py`: 1 failed, 1 passed
+  (`assert None == {'git': ..., 'rev': 'd00e0119...'}`).
+- `pytest runtime_tests` without a DSN: 2 errors (`KeyError: 'PLATFORM_TEST_DSN'`).
+
+GREEN after the changes:
+
+- `PLATFORM_TEST_DSN=... python -m pytest -q`: 74 passed, 27 subtests, no
+  database skips, one upstream Starlette/httpx deprecation warning.
+- `pytest runtime_tests` without a DSN: 2 passed, 15 skipped.
+- `bash scripts/check.sh`: contract, schema pin, independence gate, 57 unit tests OK.
+- `ruff check .` (0.17.1): clean. `gitleaks git` 8.30.1 over full history: no leaks.
+
+Not done here (deliberately): deployment, a container build, owner-only
+BOO-155 follow-ups (branch protection on `main`, dropping the
+`BOOK_BACKEND_CORE_DIR` default, the registry `source_paths` change), and any
+flag feature beyond PR #1 (targeting rules, audit history, SDK caching).
+
+## Staging plan (not executed) — first possible date 2026-11-01
+
+Blocked until then: the Neon `empire-platform` free compute quota is exhausted
+until 2026-11-01 and Railway deploys stop at an approval step. Each step needs
+the owner's go; nothing has been deployed.
+
+1. Database: a dedicated database for this service (no shared tables), a DDL role
+   for `migrate` and a separate NOSUPERUSER NOBYPASSRLS runtime role with schema
+   USAGE, `platform_schema_migrations` SELECT and `feature_flags`
+   SELECT/INSERT/UPDATE/DELETE. Both connection strings go to Infisical
+   `/platform-developer`.
+2. Image: build the `wheelhouse/` (this wheel plus `platform-backend-core` at the
+   CI-pinned commit and their dependencies) and deploy one Railway service for
+   `serve` with `DATABASE_URL` (runtime role), JWT issuer `empire-platform`,
+   audience and `JWT_JWKS_URL` or `JWT_PUBLIC_KEY`. Run `migrate` once with the
+   DDL role. Approve the pending deployment through GraphQL.
+3. Smoke test with a service token (`flags:read flags:write`): `/readyz` 200; PUT
+   a `smoke.check` flag (rollout 0, one allowlisted subject); evaluate returns
+   true for that subject and false for another; a stale-version PUT returns 409; a
+   token for another workspace gets 404; DELETE with the current version.
+4. Rollback drill: stop the service and restore a backup into a new database
+   (never over the live one), then repeat the smoke reads.
+5. Then add Sentry and the uptime monitor, and only after that move a first
+   consumer (owner to pick) with a rollback to its current configuration.

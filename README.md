@@ -70,4 +70,4 @@ disposable state store. Record the evidence in the parent platform registry.
 Correlation: `SHARED-INFRA-2026-10-15`. The new Python 3.12+ / PostgreSQL 16+
 runtime owns workspace data through forced RLS and verified UUID workspace JWTs.
 See [API and operating guide](docs/runtime.md). Original contracts, schema pins
-and offline checks are retained. This code has not been pushed or deployed.
+and offline checks are retained. This code is built and tested in CI but not deployed.
