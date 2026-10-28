@@ -15,7 +15,9 @@ from platform_developer.store import Conflict, FlagStore
 
 @pytest.fixture
 def pooled():
-    with temporary_database(os.environ['PLATFORM_TEST_DSN'],prefix='reuse_deve_') as temp:
+    dsn=os.environ.get('PLATFORM_TEST_DSN')
+    if not dsn:pytest.skip('explicit disposable PostgreSQL DSN required')
+    with temporary_database(dsn,prefix='reuse_deve_') as temp:
         MigrationRunner(temp.admin_dsn,namespace='flags').apply(MIGRATIONS)
         temp.grant_schema()
         database=Database(temp.runtime_dsn,min_size=1,max_size=1)
