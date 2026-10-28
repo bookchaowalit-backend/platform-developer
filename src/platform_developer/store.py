@@ -8,21 +8,23 @@ from .migrations import MIGRATION_NAMESPACE, MIGRATIONS
 
 
 class Conflict(Exception):pass
+class InvalidInput(ValueError):
+    """Client-supplied data failed domain validation (HTTP 422). Any other ValueError is a bug."""
 
 def identifier(value):
-    if not isinstance(value,str) or not re.fullmatch(r'[a-z][a-z0-9_.-]{0,63}',value):raise ValueError('Invalid identifier')
+    if not isinstance(value,str) or not re.fullmatch(r'[a-z][a-z0-9_.-]{0,63}',value):raise InvalidInput('Invalid identifier')
     return value
 
 def subject(value):
-    if not isinstance(value,str) or not re.fullmatch(r'[A-Za-z0-9_:@.-]{1,128}',value):raise ValueError('Invalid subject')
+    if not isinstance(value,str) or not re.fullmatch(r'[A-Za-z0-9_:@.-]{1,128}',value):raise InvalidInput('Invalid subject')
     return value
 
 class FlagStore:
     def __init__(self,database):self.db=database
     def put(self,workspace,name,enabled,rollout,subjects,version):
         identifier(name)
-        if type(enabled) is not bool or type(rollout) is not int or not 0<=rollout<=10000:raise ValueError('Invalid flag')
-        if not isinstance(subjects,list) or len(subjects)>100:raise ValueError('Invalid subjects')
+        if type(enabled) is not bool or type(rollout) is not int or not 0<=rollout<=10000:raise InvalidInput('Invalid flag')
+        if not isinstance(subjects,list) or len(subjects)>100:raise InvalidInput('Invalid subjects')
         subjects=sorted({subject(x) for x in subjects})
         if version is not None and (type(version) is not int or version<1):raise Conflict()
         with self.db.transaction(workspace) as conn, conn.cursor(row_factory=dict_row) as c:
@@ -37,7 +39,7 @@ class FlagStore:
         with self.db.transaction(workspace) as conn, conn.cursor(row_factory=dict_row) as c:
             return c.execute('SELECT name,enabled,rollout,subjects,version FROM feature_flags WHERE name=%s',(name,)).fetchone()
     def list(self,workspace,limit=100,after=''):
-        if not 1<=limit<=100:raise ValueError('Invalid limit')
+        if not 1<=limit<=100:raise InvalidInput('Invalid limit')
         with self.db.transaction(workspace) as conn, conn.cursor(row_factory=dict_row) as c:
             return c.execute('SELECT name,enabled,rollout,subjects,version FROM feature_flags WHERE name>%s ORDER BY name LIMIT %s',(after,limit)).fetchall()
     def delete(self,workspace,name,version):

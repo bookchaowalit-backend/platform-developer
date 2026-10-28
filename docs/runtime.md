@@ -8,12 +8,34 @@ unchanged because its guard requires activation evidence.
 
 ## Installation and lifecycle
 
-Python >=3.12, PostgreSQL >=16. Build/review wheels for this repository and
-`platform-backend-core==0.1.0`; the parent release bundles all transitive wheels
-in `wheelhouse/` for the Dockerfile. Nothing is published to PyPI. Local editing
+Python >=3.12, PostgreSQL >=16. Nothing is published to PyPI. Local editing
 uses `pip install -e . --no-deps` after installing the reviewed core and runtime
-dependencies. `Dockerfile` and `railway.toml` are reference release assets;
-no container build or Railway deployment has been executed here.
+dependencies. `railway.toml` is a reference release asset; no Railway deployment
+has been executed here.
+
+### Container image
+
+`docker build .` works from a clean checkout; no pre-staged `wheelhouse/` is
+needed. The `Dockerfile` is two stages:
+
+1. `build` (`python:3.12-slim` plus `git`): `pip wheel` builds this service's wheel
+   and `platform-backend-core` from the same reviewed commit CI installs
+   (`d00e0119c2e47da3942d9c7b4b88828953f8bc5a`), with all transitive dependencies.
+2. `runtime` (`python:3.12-slim`, no git, no build tools): installs only those
+   wheels with `--no-index`, runs as UID/GID `65532`, `PORT=8080`, and keeps
+   `CMD ["python", "-m", "platform_developer", "serve"]`. Run `migrate` as a
+   separate one-off with the DDL-role `DATABASE_URL` (same image, command override).
+
+`.dockerignore` keeps `.git`, `.venv`, build output and `.env*` out of the build
+context. CI job `image` in `shared-runtime.yml` runs `docker build` on every push
+and pull request, then checks that the image imports the service and runs as a
+non-root user. It never pushes or deploys. `tests/test_build_hygiene.py` (part of
+`scripts/check.sh`) fails if the Dockerfile copies a git-ignored path, stops being
+multi-stage, pins a core commit other than the workflow's, runs the final stage as
+root or changes the CMD, if CI stops building the image, or if any workflow `uses:`
+is not pinned to a 40-hex commit SHA (tags go in a trailing comment). Upgrading
+the core means changing the commit in the workflow, the Dockerfile and
+`[tool.uv.sources]` together; the tests fail on any mismatch.
 
 - `python -m platform_developer migrate`: explicit migration with DDL-role `DATABASE_URL`.
 - `python -m platform_developer serve`: separate nonowner, NOSUPERUSER NOBYPASSRLS
@@ -36,6 +58,9 @@ Use a dedicated database per service; no other service's tables are imported.
 Runtime role and backup/restore provisioning remain operator release work.
 All workspace authority comes from JWT `ws`, actor from JWT `sub`; body/header
 workspace fields never select tenant context. API validation errors are generic.
+Only request-schema errors and the store's domain `InvalidInput` (a `ValueError`
+subclass) return 422 `Invalid input`; any other exception, including an unexpected
+`ValueError`, is a server bug and returns the shared core's redacted 500.
 
 ## Verification and release gate
 
@@ -175,6 +200,34 @@ BOO-155 follow-ups (branch protection on `main`, dropping the
 `BOOK_BACKEND_CORE_DIR` default, the registry `source_paths` change), and any
 flag feature beyond PR #1 (targeting rules, audit history, SDK caching).
 
+## Review follow-ups 2026-10-29 (branch `developer-followups`)
+
+Three low-severity review findings on `main` `701ebe6`:
+
+1. The app mapped every `ValueError` to 422, hiding server bugs. The store now
+   raises a domain `InvalidInput(ValueError)` and only that maps to 422.
+2. `shared-runtime.yml` used `actions/checkout@v4` and `actions/setup-python@v5`
+   by tag. Both are pinned to commit SHAs (`11d5960a...` = v4, `a26af69b...` = v5,
+   lightweight tags resolved with `gh api .../git/ref/tags/...`), tag in a comment.
+3. The `Dockerfile` copied the git-ignored `wheelhouse/`, so it could not build
+   from a clone. It is now the multi-stage build under "Container image", and CI
+   builds it.
+
+RED (tests written first, run before the change; Python 3.12, PostgreSQL 16 `pgserver`):
+
+- `pytest runtime_tests/test_error_mapping.py`: collection error, `InvalidInput`
+  missing. With a temporary `InvalidInput = ValueError` alias:
+  `test_unexpected_value_error_is_redacted_500` failed `assert 422 == 500`, 7 passed.
+- `python3 -m unittest tests.test_build_hygiene`: 5 of 7 failed (unpinned
+  `actions/checkout@v4` / `actions/setup-python@v5`; `wheelhouse` in the Dockerfile;
+  one `FROM`; no core commit in the Dockerfile; no `docker build` step). The
+  checker self-test and the existing non-root `USER` passed.
+
+GREEN: `PLATFORM_TEST_DSN=... pytest -q` 89 passed, 27 subtests, no database
+skips, one upstream warning; `bash scripts/check.sh` 64 unit tests OK; `ruff check .`
+(0.17.3) clean. The image build is verified only by the CI `image` job (no local
+Docker). Nothing was pushed to a registry or deployed.
+
 ## Staging plan (not executed) — first possible date 2026-11-01
 
 Blocked until then: the Neon `empire-platform` free compute quota is exhausted
@@ -186,8 +239,8 @@ the owner's go; nothing has been deployed.
    USAGE, `platform_schema_migrations` SELECT and `feature_flags`
    SELECT/INSERT/UPDATE/DELETE. Both connection strings go to Infisical
    `/platform-developer`.
-2. Image: build the `wheelhouse/` (this wheel plus `platform-backend-core` at the
-   CI-pinned commit and their dependencies) and deploy one Railway service for
+2. Image: `docker build .` (see "Container image"; CI already builds it on every push)
+   and deploy one Railway service for
    `serve` with `DATABASE_URL` (runtime role), JWT issuer `empire-platform`,
    audience and `JWT_JWKS_URL` or `JWT_PUBLIC_KEY`. Run `migrate` once with the
    DDL role. Approve the pending deployment through GraphQL.
