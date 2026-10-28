@@ -47,7 +47,7 @@ lines or rule labels drift from the code.
 | File | Role | In CI | External input |
 |---|---|---|---|
 | `.github/workflows/check.yml` | CI template | yes | none (`actions/checkout` of this repo only, check.yml:26-37) |
-| `.github/workflows/shared-runtime.yml` | CI template | yes | pre-registered: `present_on: pending codex/shared-infrastructure-20261015 PR #1` (not on main yet) |
+| `.github/workflows/shared-runtime.yml` | CI template | yes | none from product repos (`actions/checkout` of this repo; `pip install` of `platform-backend-core` at the pinned commit; landed with PR #1) |
 | `scripts/check.sh` | CI entrypoint | yes | none (cds to its own root, check.sh:3-4) |
 | `scripts/check.py` | boundary check | yes | none (`ROOT` from `__file__`, check.py:28) |
 | `scripts/check_schema_pin.py` | boundary check | yes | optional `--canonical` / `BOOK_BACKEND_CORE_DIR` (platform core schema, check_schema_pin.py:99-103); not used by the default gate |
@@ -55,7 +55,7 @@ lines or rule labels drift from the code.
 | `scripts/check_independence.py` | boundary check | yes | none |
 | `tests/test_contract_check.py`, `tests/test_drift_checks.py`, `tests/test_independence.py` | tests | yes | temp copies only |
 
-Result: all 9 files present on this branch pass (10 after PR #1 merges); the default gate opens nothing outside the repository.
+Result: all 10 files pass; the default gate opens nothing outside the repository.
 
 ## Inventory: solo-empire (read-only, `63efeeb`)
 
@@ -116,6 +116,10 @@ siblings, but their full verdict still depends on product checkouts.
    (the workflow also passes the static and import rules). After PR #1 merges,
    the `present_on` field should be removed. `src/` and `runtime_tests/` from
    that PR are runtime code and outside this gate's scope.
+   **Closed on branch `developer-runtime` (2026-10-29):** PR #1 is rebased onto
+   `main`, the `present_on` marker is removed, and
+   `GateFixtureTests.test_present_files_carry_no_pending_marker` fails if a file that
+   exists still carries a pending marker (observed RED before the fixture change).
 
 ## Owner decision — ACCEPTED (owner decision 2026-10-16)
 

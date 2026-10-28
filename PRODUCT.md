@@ -29,12 +29,14 @@ A boundary contract with offline evidence, not a running service. The template-i
 
 - Status: `scaffolded`; DOCPACK verdict: `template`. The runtime is not activated; the current
   implementation is `.github` in the parent registry.
-- CI: shared `ci-python` (Ruff and `scripts/check.sh` on Python 3.11 and 3.12) and the shared
-  security workflow, on GitHub-hosted runners (public repository).
-- Sentry does not apply: nothing runs in production. Add it in the change that activates a
-  runtime.
-- The open `codex/shared-infrastructure-20261015` pull request (decision D8) is outside this
-  document.
+- Feature-flag runtime pilot (`src/platform_developer`, PR #1 rebased as `developer-runtime`):
+  workspace flags in PostgreSQL with forced RLS, see [docs/runtime.md](docs/runtime.md).
+  Built and tested only; not deployed, so the boundary status stays `scaffolded`.
+- CI: shared `ci-python` (Ruff and `scripts/check.sh` on Python 3.11 and 3.12), the shared
+  security workflow, and `Shared runtime` (pytest against PostgreSQL 16 on Python 3.12, wheel
+  build), on GitHub-hosted runners (public repository).
+- Sentry does not apply: nothing runs in production. Add it in the change that deploys the
+  runtime (staging plan in docs/runtime.md).
 
 ## Capabilities and Constraints
 

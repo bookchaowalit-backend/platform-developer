@@ -176,8 +176,18 @@ class GateFixtureTests(unittest.TestCase):
         self.assertEqual(unlisted, [], f"in-scope files missing from the fixture: {unlisted}; {FIXTURE_HINT}")
         self.assertEqual(absent, [], f"fixture lists files that do not exist: {absent}; {FIXTURE_HINT}")
 
+    def test_present_files_carry_no_pending_marker(self) -> None:
+        # A pending marker only covers a file that has not landed yet; once the file is
+        # in the repository the marker is stale and must be removed (BOO-155 gap 5).
+        section = self.fixture["platform_developer"]
+        actual = set(independence.scope_files(ROOT))
+        stale = sorted(item["path"] for item in section["files"] if "present_on" in item and item["path"] in actual)
+        self.assertEqual(stale, [], f"remove present_on from files that now exist: {stale}; {FIXTURE_HINT}")
+
     def test_pending_marker_tolerates_only_absent_listed_files(self) -> None:
         section = json.loads(json.dumps(self.fixture["platform_developer"]))
+        # a synthetic not-yet-landed file keeps this rule exercised when nothing is pending
+        section["files"].append({"path": ".github/workflows/not-landed.yml", "present_on": section["pending_marker"] + "synthetic"})
         pending = [item["path"] for item in section["files"] if "present_on" in item]
         actual = [path for path in independence.scope_files(ROOT) if path not in pending]
         self.assertEqual(fixture_drift(section, actual), ([], []))
