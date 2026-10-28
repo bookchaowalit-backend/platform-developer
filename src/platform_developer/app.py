@@ -1,7 +1,11 @@
-from fastapi import Depends,HTTPException,Query
-from pydantic import BaseModel,ConfigDict,Field
-from platform_backend_core import create_app as base_app,require_scope
-from .store import FlagStore,Conflict
+from fastapi import Depends, HTTPException, Query
+from platform_backend_core import create_app as base_app
+from platform_backend_core import require_scope
+from pydantic import BaseModel, ConfigDict, Field
+
+from .store import Conflict, FlagStore
+
+
 class Flag(BaseModel):
     model_config=ConfigDict(extra='forbid',strict=True)
     enabled:bool

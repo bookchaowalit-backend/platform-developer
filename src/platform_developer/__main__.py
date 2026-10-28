@@ -1,9 +1,12 @@
 """Explicit service lifecycle; migrations never run at API startup."""
 import argparse
 import os
-from platform_backend_core import Database,MigrationRunner,TokenVerifier
-from .migrations import MIGRATIONS,MIGRATION_NAMESPACE
+
+from platform_backend_core import Database, MigrationRunner, TokenVerifier
+
 from .app import create_app
+from .migrations import MIGRATION_NAMESPACE, MIGRATIONS
+
 
 def main():
     p=argparse.ArgumentParser();p.add_argument('command',choices=['serve','migrate']);args=p.parse_args()
@@ -15,6 +18,6 @@ def main():
         app=create_app(Database(os.environ['DATABASE_URL']),verifier)
         import uvicorn
         uvicorn.run(app,host='0.0.0.0',port=int(os.environ.get('PORT','8080')),access_log=False,limit_concurrency=100)
-    except Exception:
+    except Exception:  # noqa: BLE001 - redacted on purpose: config errors can echo secrets
         raise SystemExit('Service configuration or dependency unavailable') from None
 if __name__=='__main__':main()

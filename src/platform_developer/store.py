@@ -1,8 +1,12 @@
 import hashlib
 import re
+
 from psycopg.rows import dict_row
-from .migrations import MIGRATIONS,MIGRATION_NAMESPACE
 from psycopg.types.json import Jsonb
+
+from .migrations import MIGRATION_NAMESPACE, MIGRATIONS
+
+
 class Conflict(Exception):pass
 
 def identifier(value):
@@ -19,7 +23,7 @@ class FlagStore:
         identifier(name)
         if type(enabled) is not bool or type(rollout) is not int or not 0<=rollout<=10000:raise ValueError('Invalid flag')
         if not isinstance(subjects,list) or len(subjects)>100:raise ValueError('Invalid subjects')
-        subjects=sorted(set(subject(x) for x in subjects))
+        subjects=sorted({subject(x) for x in subjects})
         if version is not None and (type(version) is not int or version<1):raise Conflict()
         with self.db.transaction(workspace) as conn, conn.cursor(row_factory=dict_row) as c:
             if version is None:

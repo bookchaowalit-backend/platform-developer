@@ -1,11 +1,15 @@
-from uuid import uuid4,UUID
-from concurrent.futures import ThreadPoolExecutor
-from platform_developer.store import FlagStore,Conflict
-from platform_developer.migrations import MIGRATIONS
 import os
+from concurrent.futures import ThreadPoolExecutor
+from uuid import uuid4
+
+import psycopg
 import pytest
 from platform_backend_core import Database, MigrationRunner
 from platform_backend_core.testing import temporary_database
+
+from platform_developer.migrations import MIGRATIONS
+from platform_developer.store import Conflict, FlagStore
+
 
 @pytest.fixture
 def database():
@@ -43,5 +47,5 @@ def test_delete_version_and_force_rls(database):
     db,_=database;w=uuid4();s=FlagStore(db);s.put(w,'one',True,10000,[],None)
     with pytest.raises(Conflict):s.delete(w,'one',2)
     s.delete(w,'one',1);assert s.get(w,'one') is None
-    with db.transaction(w) as c:
-        with pytest.raises(Exception):c.execute('INSERT INTO feature_flags(workspace_id,name,enabled,rollout,subjects) VALUES (%s, %s, true, 1, %s)',(uuid4(),'foreign','[]'))
+    with db.transaction(w) as c, pytest.raises(psycopg.errors.InsufficientPrivilege):
+        c.execute('INSERT INTO feature_flags(workspace_id,name,enabled,rollout,subjects) VALUES (%s, %s, true, 1, %s)',(uuid4(),'foreign','[]'))
