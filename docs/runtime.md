@@ -20,7 +20,7 @@ needed. The `Dockerfile` is two stages:
 
 1. `build` (`python:3.12-slim` plus `git`): `pip wheel` builds this service's wheel
    and `platform-backend-core` from the same reviewed commit CI installs
-   (`d00e0119c2e47da3942d9c7b4b88828953f8bc5a`), with all transitive dependencies.
+   (`88306b28228f789eecd214a11ca8a0640e9d6233`), with all transitive dependencies.
 2. `runtime` (`python:3.12-slim`, no git, no build tools): installs only those
    wheels with `--no-index`, runs as UID/GID `65532`, `PORT=8080`, and keeps
    `CMD ["python", "-m", "platform_developer", "serve"]`. Run `migrate` as a
@@ -163,7 +163,7 @@ Changes beyond the rebase:
   existing file keeps a pending marker. The pending-tolerance test uses a
   synthetic not-landed file so it still exercises the rule.
 - Reproducible build gate: `[tool.uv.sources]` pins `platform-backend-core` to the
-  commit `shared-runtime.yml` installs (`d00e0119`; the name is not on PyPI, so this
+  commit `shared-runtime.yml` installs (`88306b28`; the name is not on PyPI, so this
   blocks dependency confusion). `runtime_tests/test_build_pin.py` checks the pin
   matches the workflow and the dependency stays exact.
 - Ruff 0.17.1 clean: `extend-immutable-calls` for FastAPI markers and
@@ -175,7 +175,7 @@ Changes beyond the rebase:
   (it raised `KeyError`), as this document already promised.
 
 Environment: Python 3.12, PostgreSQL 16.2 (local `pgserver`; CI uses the
-`postgres:16` service), `platform-backend-core` at `d00e0119`, no network calls,
+`postgres:16` service), `platform-backend-core` at `88306b28`, no network calls,
 no credentials. `PLATFORM_TEST_DSN` pointed at the disposable local server.
 
 RED (each test written first and run before the change):
@@ -184,7 +184,7 @@ RED (each test written first and run before the change):
   `test_present_files_carry_no_pending_marker` (`['.github/workflows/shared-runtime.yml'] != []`)
   and the clean-checkout copy failing on the same test.
 - `pytest runtime_tests/test_build_pin.py`: 1 failed, 1 passed
-  (`assert None == {'git': ..., 'rev': 'd00e0119...'}`).
+  (`assert None == {'git': ..., 'rev': '88306b28...'}`).
 - `pytest runtime_tests` without a DSN: 2 errors (`KeyError: 'PLATFORM_TEST_DSN'`).
 
 GREEN after the changes:
