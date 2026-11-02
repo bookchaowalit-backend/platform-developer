@@ -2,7 +2,9 @@ from fastapi import Depends, HTTPException, Query
 from platform_backend_core import create_app as base_app
 from platform_backend_core import require_scope
 from pydantic import BaseModel, ConfigDict, Field
+from starlette.middleware import Middleware
 
+from ._sentry import CaptureErrors
 from .store import Conflict, FlagStore, InvalidInput
 
 
@@ -17,6 +19,8 @@ class Evaluation(BaseModel):
     subject:str=Field(min_length=1,max_length=128)
 def create_app(database,verifier):
     app=base_app('developer',database,verifier,max_body_bytes=32768);store=FlagStore(database)
+    # Last in the list = innermost: inside the core boundary that turns errors into a 500.
+    app.user_middleware.append(Middleware(CaptureErrors))
     app.state.readiness_checks['flags_schema']=store.ready
     @app.exception_handler(Conflict)
     async def conflict(request,exc):
