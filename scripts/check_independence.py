@@ -196,9 +196,9 @@ def _allowed_prefixes(root: Path) -> list[Path]:
     for value in (sys.prefix, sys.base_prefix, sys.exec_prefix, sys.base_exec_prefix):
         prefixes.add(Path(value).resolve())
     for key in ("stdlib", "platstdlib", "purelib", "platlib"):
-        value = sysconfig.get_paths().get(key)
-        if value:
-            prefixes.add(Path(value).resolve())
+        found = sysconfig.get_paths().get(key)
+        if found:
+            prefixes.add(Path(found).resolve())
     return sorted(prefixes)
 
 

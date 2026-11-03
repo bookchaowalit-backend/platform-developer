@@ -9,8 +9,9 @@ CORE_URL = "https://github.com/bookchaowalit-backend/platform-backend-core.git"
 
 
 def workflow_core_commit() -> str:
-    text = (ROOT / ".github" / "workflows" / "shared-runtime.yml").read_text(encoding="utf-8")
-    commits = set(re.findall(r"platform-backend-core\.git@([0-9a-f]{40})", text))
+    """The commit uv.lock resolved the core to; CI installs it with uv sync --frozen."""
+    text = (ROOT / "uv.lock").read_text(encoding="utf-8")
+    commits = {c for pair in re.findall(r"platform-backend-core\.git\?rev=([0-9a-f]{40})#([0-9a-f]{40})", text) for c in pair}
     assert len(commits) == 1, commits
     return commits.pop()
 

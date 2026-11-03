@@ -12,6 +12,7 @@ import subprocess
 import tempfile
 import unittest
 from pathlib import Path
+from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURE = ROOT / "fixtures" / "gates" / "template-independence.json"
@@ -163,6 +164,8 @@ def fixture_drift(section: dict, actual: list[str]) -> tuple[list[str], list[str
 
 class GateFixtureTests(unittest.TestCase):
     """Fail when fixtures/gates/template-independence.json drifts from the repository."""
+
+    fixture: dict[str, Any]
 
     @classmethod
     def setUpClass(cls) -> None:
