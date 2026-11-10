@@ -4,13 +4,13 @@
 
 ## Decision
 
-- `railway.toml`: builder `DOCKERFILE`, `healthcheckPath = "/readyz"`, timeout 30, restart `ON_FAILURE` สูงสุด 3 ครั้ง
+- `.railway/railway.ts`: builder `DOCKERFILE`, `healthcheckPath = "/readyz"`, timeout 30, restart `ON_FAILURE` สูงสุด 3 ครั้ง
 - image สองขั้น (`python:3.12-slim`), runtime ไม่มี git/build tools, รันเป็น UID 65532
 - deploy ด้วย CLI `railway up --ci` จาก `git archive main` ไม่ใช่ GitHub-connected deploy
 
 ## Evidence
 
-- `railway.toml`, `Dockerfile`, `.dockerignore`, `tests/test_build_hygiene.py`
+- `.railway/railway.ts`, `Dockerfile`, `.dockerignore`, `tests/test_build_hygiene.py`
 - `.github/workflows/shared-runtime.yml` (build only, never pushes)
 - ops record: book-platforms-status (2026-11-03): `developer-api-production-2fad`, region `asia-southeast1-eqsg3a`, sleep on, developer main `6ffbb1f` CLI-deployed
 

@@ -11,7 +11,7 @@
 | 03 | User flows (API call flows) | done | [03-user-flows.md](03-user-flows.md) | `app.py`, `store.py`, core `http.py`, `runtime_tests/test_http.py` |
 | 04 | Traceability (RTM) | done | [04-traceability.md](04-traceability.md) | `PRODUCT.md`, `docs/runtime.md`, BOO-155 gate, tests, workflows |
 | 05 | C4 Context | done | [05-c4-context.md](05-c4-context.md) | `src/`, workflows, `contract.json`, ops record |
-| 06 | C4 Container | done | [06-c4-container.md](06-c4-container.md) | `Dockerfile`, `railway.toml`, `__main__.py`, core `db.py`/`auth.py` |
+| 06 | C4 Container | done | [06-c4-container.md](06-c4-container.md) | `Dockerfile`, `.railway/railway.ts`, `__main__.py`, core `db.py`/`auth.py` |
 | 07 | C4 Component | done | [07-c4-component.md](07-c4-component.md) | `src/platform_developer/*.py`, core `http.py`/`auth.py`/`db.py` |
 | 08 | ADRs (5, retro-documented) | done | [08-adr/](08-adr/) | see each ADR's Evidence |
 | 09 | ERD | done | [09-erd.md](09-erd.md) | `migrations.py`, `store.py`, core `migrations.py`/`db.py` |
@@ -21,12 +21,12 @@
 | 13 | Threat model | done | [13-threat-model.md](13-threat-model.md) | `src/`, core, `Dockerfile`, workflows, BOO-155 gate |
 | 14 | Backup and DR | done (gaps marked) | [14-backup-dr.md](14-backup-dr.md) | `docs/runtime.md`, central ADR-0002, ops record |
 | 15 | CI/CD pipeline | done | [15-cicd-pipeline.md](15-cicd-pipeline.md) | `.github/workflows/check.yml`, `shared-runtime.yml`, `scripts/check.sh` |
-| 16 | Deployment | done | [16-deployment.md](16-deployment.md) | `railway.toml`, `Dockerfile`, `__main__.py`, `_sentry.py`, ops record |
+| 16 | Deployment | done | [16-deployment.md](16-deployment.md) | `.railway/railway.ts`, `Dockerfile`, `__main__.py`, `_sentry.py`, ops record |
 | 17 | Test coverage matrix | done | [17-test-coverage-matrix.md](17-test-coverage-matrix.md) | `tests/`, `runtime_tests/`, `pyproject.toml`, `check.yml` |
 | 18 | Git and release workflow | done | [18-git-release-workflow.md](18-git-release-workflow.md) | `git log`, `gh pr list`, workflows, ops record |
 | 19 | Service dependency map | done | [19-service-dependency-map.md](19-service-dependency-map.md) | `pyproject.toml`, `Dockerfile`, `src/`, core, `contract.json`, ops record |
-| 20 | Observability | done | [20-observability.md](20-observability.md) | core `http.py`, `_sentry.py`, `railway.toml`, central ADR-0002, ops record |
-| 21 | Incident response | done | [21-incident-response.md](21-incident-response.md) | `railway.toml`, `docs/runtime.md`, `_sentry.py`, central ADR-0002, ops record |
+| 20 | Observability | done | [20-observability.md](20-observability.md) | core `http.py`, `_sentry.py`, `.railway/railway.ts`, central ADR-0002, ops record |
+| 21 | Incident response | done | [21-incident-response.md](21-incident-response.md) | `.railway/railway.ts`, `docs/runtime.md`, `_sentry.py`, central ADR-0002, ops record |
 | 22 | DORA metrics | done (proxies; deploy-based values not computable) | [22-dora.md](22-dora.md) | `git log`, `gh pr list`, `gh run list`, ops record |
 
 ## Existing docs reused (not copied)

@@ -10,7 +10,7 @@ unchanged because its guard requires activation evidence.
 
 Python >=3.12, PostgreSQL >=16. Nothing is published to PyPI. Local editing
 uses `pip install -e . --no-deps` after installing the reviewed core and runtime
-dependencies. `railway.toml` is a reference release asset; no Railway deployment
+dependencies. `.railway/railway.ts` is a reference release asset; no Railway deployment
 has been executed here.
 
 ### Container image

@@ -14,7 +14,7 @@ Requirement มาจาก `PRODUCT.md`, `docs/runtime.md` (Flag API, lifecycle
 | R8 | deterministic sha256 bucket rollout + allowlist (runtime.md) | `FlagStore.evaluate` | `runtime_tests/test_runtime.py::test_rollout_version_and_tenant_isolation` | `python` |
 | R9 | workspace isolation via forced RLS; cross-workspace = 404 (runtime.md) | `migrations.py` 0001, core `Database.transaction` | `test_runtime.py`, `test_http.py`, `test_pool_reuse.py` | `python` |
 | R10 | scope auth: 401 / 403 (runtime.md) | core `require_scope`, `app.py` | `runtime_tests/test_http.py::test_authenticated_flag_api_conflict_and_bounds` | `python` |
-| R11 | readiness checks migrations checksum + each privilege + RLS (runtime.md) | `FlagStore.ready`, core `readyz` | `runtime_tests/test_http.py` (readiness tests) | `python`; Railway healthcheck `/readyz` (`railway.toml`) |
+| R11 | readiness checks migrations checksum + each privilege + RLS (runtime.md) | `FlagStore.ready`, core `readyz` | `runtime_tests/test_http.py` (readiness tests) | `python`; Railway healthcheck `/readyz` (`.railway/railway.ts`) |
 | R12 | only InvalidInput maps to 422, other errors redacted 500 (runtime.md follow-ups) | `store.py` `InvalidInput`, `app.py` handlers | `runtime_tests/test_error_mapping.py` | `python` |
 | R13 | migrate is a separate CLI command, never at startup (runtime.md) | `__main__.py` | `runtime_tests/test_http.py::test_documented_cli_migrate_makes_http_ready` | `python` |
 | R14 | image builds from clean checkout, non-root, CMD serve (runtime.md Container image) | `Dockerfile`, `.dockerignore` | `tests/test_build_hygiene.py` | `shared-runtime.yml` job `image` |
@@ -53,7 +53,7 @@ flowchart LR
   C4 --> J3
 ```
 
-Sources: `PRODUCT.md`, `docs/runtime.md`, `docs/CONTRACT-SURFACE.md`, `docs/gates/BOO-155-template-independence.md`, `.github/workflows/check.yml`, `.github/workflows/shared-runtime.yml`, `railway.toml`, files listed in the table
+Sources: `PRODUCT.md`, `docs/runtime.md`, `docs/CONTRACT-SURFACE.md`, `docs/gates/BOO-155-template-independence.md`, `.github/workflows/check.yml`, `.github/workflows/shared-runtime.yml`, `.railway/railway.ts`, files listed in the table
 
 ## Open questions
 

@@ -166,7 +166,7 @@ flowchart LR
 
 - repo `bookchaowalit-backend/platform-developer` `origin/main` `05ba151` (live runtime ตาม ops record `6ffbb1f`)
 - `PRODUCT.md`, `README.md`, `contract.json`, `docs/runtime.md`, `docs/CONTRACT-SURFACE.md`, `docs/UPGRADE-PLAN.md`, `docs/gates/BOO-155-template-independence.md`, `fixtures/gates/template-independence.json`
-- `pyproject.toml`, `uv.lock`, `Dockerfile`, `railway.toml`, `.github/workflows/check.yml`, `.github/workflows/shared-runtime.yml`, `scripts/check.sh`, `scripts/check_independence.py`
+- `pyproject.toml`, `uv.lock`, `Dockerfile`, `.railway/railway.ts`, `.github/workflows/check.yml`, `.github/workflows/shared-runtime.yml`, `scripts/check.sh`, `scripts/check_independence.py`
 - `src/platform_developer/{__main__,app,store,migrations,_sentry}.py`, `tests/`, `runtime_tests/`
 - `docs/diagrams/` (Core 22 pack, commit `05ba151`) และ `docs/diagrams/08-adr/ADR-0001…0005`
 - `bookchaowalit-backend/platform-api-gateway@51c4711` `routes.json`; `bookchaowalit/platform-mcp-remote-worker@7d127c2` `src/worker.ts`, `wrangler.toml`

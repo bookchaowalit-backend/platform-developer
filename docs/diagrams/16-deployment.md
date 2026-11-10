@@ -26,7 +26,7 @@ flowchart TB
   UPT["platform-uptime-worker hourly"] -->|"GET /readyz"| SVC
 ```
 
-Sources: `railway.toml`, `Dockerfile`, `src/platform_developer/__main__.py` (env names), `src/platform_developer/_sentry.py` (`SENTRY_DSN`, `SENTRY_ENVIRONMENT`, `RAILWAY_GIT_COMMIT_SHA`, `RAILWAY_SERVICE_NAME`), `docs/runtime.md`, ops record: book-platforms-status (2026-11-03) for service name, region, sleep, Neon, Infisical, Sentry, identity issuer, uptime worker, CLI deploy of main `6ffbb1f`
+Sources: `.railway/railway.ts`, `Dockerfile`, `src/platform_developer/__main__.py` (env names), `src/platform_developer/_sentry.py` (`SENTRY_DSN`, `SENTRY_ENVIRONMENT`, `RAILWAY_GIT_COMMIT_SHA`, `RAILWAY_SERVICE_NAME`), `docs/runtime.md`, ops record: book-platforms-status (2026-11-03) for service name, region, sleep, Neon, Infisical, Sentry, identity issuer, uptime worker, CLI deploy of main `6ffbb1f`
 
 | Item | Value | Evidence |
 |---|---|---|
