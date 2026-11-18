@@ -1,4 +1,5 @@
 from fastapi import Depends, HTTPException, Query
+from fastapi.routing import APIRoute
 from platform_backend_core import create_app as base_app
 from platform_backend_core import require_scope
 from pydantic import BaseModel, ConfigDict, Field
@@ -17,8 +18,14 @@ class Flag(BaseModel):
 class Evaluation(BaseModel):
     model_config=ConfigDict(extra='forbid',strict=True)
     subject:str=Field(min_length=1,max_length=128)
+NOT_PUBLIC=frozenset({'/docs','/docs/oauth2-redirect','/redoc','/metrics'})
 def create_app(database,verifier):
     app=base_app('developer',database,verifier,max_body_bytes=32768);store=FlagStore(database)
+    # Only probes, the API and its schema are public: no docs UI, and metrics need a scope.
+    metrics=next(r.endpoint for r in app.router.routes if isinstance(r,APIRoute) and r.path=='/metrics')
+    app.router.routes=[r for r in app.router.routes if getattr(r,'path',None) not in NOT_PUBLIC]
+    app.docs_url=app.redoc_url=None
+    app.add_api_route('/metrics',metrics,methods=['GET'],include_in_schema=False,dependencies=[Depends(require_scope('metrics:read'))])
     # Last in the list = innermost: inside the core boundary that turns errors into a 500.
     app.user_middleware.append(Middleware(CaptureErrors))
     app.state.readiness_checks['flags_schema']=store.ready

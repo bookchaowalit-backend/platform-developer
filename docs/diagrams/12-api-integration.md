@@ -13,7 +13,7 @@ API reference หลักอยู่ที่ [docs/runtime.md](../runtime.md)
 | POST | `/v1/flags/{name}/evaluate` | `flags:read` | `subject` 1..128 chars, regex `[A-Za-z0-9_:@.-]` | 200 `{"enabled": bool}` | 401, 403, 422 | pure function of stored row |
 | GET | `/healthz` | none | — | 200 `{"status":"ok"}` | — | — |
 | GET | `/readyz` | none | — | 200 ready | 503 unavailable | — |
-| GET | `/metrics` | none | — | 200 Prometheus text | — | — |
+| GET | `/metrics` | JWT scope `metrics:read` | — | 200 Prometheus text; 401 / 403 | — | — |
 
 ทุก route: body ≤ 32768 bytes (413), timeout 30 s (504), unexpected error → 500 redacted, response มี header `x-request-id`
 

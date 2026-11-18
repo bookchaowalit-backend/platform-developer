@@ -44,7 +44,9 @@ the core means changing the commit in the workflow, the Dockerfile and
 - Configure `JWT_ISSUER`, `JWT_AUDIENCE`, and exactly one `JWT_PUBLIC_KEY`
   (public PEM) or `JWT_JWKS_URL` (trusted HTTPS). Credentials never come from
   files or token-supplied URLs. Use the shared-core workspace RS256 profile.
-- `GET /healthz`, `/readyz`, `/metrics` use shared redacted diagnostics.
+- `GET /healthz`, `/readyz` are public probes; `GET /metrics` needs the
+  `metrics:read` scope. `/openapi.json` stays public; the Swagger/ReDoc UI
+  (`/docs`, `/redoc`) is not served. Probes use shared redacted diagnostics.
   Readiness checks exact applied migration versions/checksums, table RLS, effective
   schema USAGE/history SELECT and every required table operation individually;
   missing schema returns generic 503. Setup and serving are separate commands.

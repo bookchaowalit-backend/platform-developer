@@ -40,6 +40,18 @@ def test_missing_schema_is_not_ready(setup):
         assert c.get('/readyz').status_code==503
         assert c.get('/healthz').status_code==200
 
+def test_docs_ui_is_not_served_and_metrics_need_a_scope(setup):
+    _,db,verifier,headers=setup
+    with TestClient(create_app(db,verifier)) as c:
+        for path in ('/docs','/docs/oauth2-redirect','/redoc'):
+            assert c.get(path).status_code==404
+        assert c.get('/metrics').status_code==401
+        assert c.get('/metrics',headers=headers('flags:read')).status_code==403
+        assert c.get('/metrics',headers=headers('metrics:read')).status_code==200
+        assert c.get('/healthz').status_code==200
+        assert c.get('/openapi.json').status_code==200
+
+
 def test_authenticated_flag_api_conflict_and_bounds(setup):
     temp,db,verifier,headers=setup
     MigrationRunner(temp.admin_dsn,namespace='flags').apply(MIGRATIONS);temp.grant_schema('public')
